@@ -6,7 +6,7 @@ import plotly.express as px
 # 1. CANVAS CONFIGURATION
 # ------------------------------------
 st.set_page_config(
-    page_title="Intel Hardware Dashboard",
+    page_title="Intel Silicon Analytics Platform",
     page_icon="💻",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -23,6 +23,8 @@ def load_data():
     df['Total Revenue (USD)'] = df['Total Revenue (USD)'].fillna(0)
     df['TDP (Watts)'] = df['TDP (Watts)'].fillna(0)
     df['Cores'] = df['Cores'].fillna(0)
+    df['Unit Price (USD)'] = df['Unit Price (USD)'].fillna(0)
+    df['Est Power Shipped (kW)'] = df['Est Power Shipped (kW)'].fillna(0)
     df['Year'] = df['Year'].fillna(df['Date'].dt.year)
     return df
 
@@ -74,14 +76,14 @@ if search_model:
     filtered_df = filtered_df[filtered_df['Model'].str.contains(search_model, case=False, na=False)]
 
 # ------------------------------------
-# 4. MAIN LAYOUT & GRID HEADERS
+# 4. MAIN LAYOUT & EXECUTIVE KPI TILES
 # ------------------------------------
 st.title("💻 Intel Silicon Infrastructure Analytics Portal")
 st.write("---")
 
 if not filtered_df.empty:
     
-    # 🔢 ROW 1: THE THREE CARD METRICS SIDE-BY-SIDE
+    # ROW 1: CORE STATISTICAL METRICS CARD BLOCKS
     col_k1, col_k2, col_k3 = st.columns(3)
     
     avg_rev = filtered_df['Total Revenue (USD)'].mean()
@@ -97,43 +99,75 @@ if not filtered_df.empty:
         
     st.write("---")
 
-    # 📊 ROW 2: PIE CHART & LINE CHART SIDE-BY-SIDE
-    col_row2_left, col_row2_right = st.columns(2)
+    # ------------------------------------
+    # 5. DIAGRAM GRID INTERFACE LAYOUT
+    # ------------------------------------
     
-    with col_row2_left:
-        st.markdown("### 🍕 Share of Units Sold by Processor Series")
+    # --- GRID ROW 1: DIAGRAMS 1 & 2 ---
+    r1_left, r1_right = st.columns(2)
+    with r1_left:
+        st.markdown("### 1. 🍕 Pie Chart: Share of Units Sold by Processor Series")
         pie_data = filtered_df.groupby('Series')['Units Sold'].sum().reset_index()
-        fig_pie = px.pie(pie_data, names='Series', values='Units Sold', template='plotly_white')
-        st.plotly_chart(fig_pie, use_container_width=True)
+        fig1 = px.pie(pie_data, names='Series', values='Units Sold', template='plotly_white')
+        st.plotly_chart(fig1, use_container_width=True)
         
-    with col_row2_right:
-        st.markdown("### 📈 Revenue Performance Trend Over Time")
+    with r1_right:
+        st.markdown("### 2. 📈 Line Chart: Revenue Performance Trend Over Time")
         time_data = filtered_df.groupby('Date')['Total Revenue (USD)'].sum().reset_index()
-        fig_line = px.line(time_data, x='Date', y='Total Revenue (USD)', labels={'Total Revenue (USD)': 'Revenue ($)'}, template='plotly_white')
-        st.plotly_chart(fig_line, use_container_width=True)
+        fig2 = px.line(time_data, x='Date', y='Total Revenue (USD)', labels={'Total Revenue (USD)': 'Revenue ($)'}, template='plotly_white')
+        st.plotly_chart(fig2, use_container_width=True)
 
     st.write("---")
 
-    # 📊 ROW 3: BAR GRAPH & DOTTED PLOT SIDE-BY-SIDE
-    col_row3_left, col_row3_right = st.columns(2)
-    
-    with col_row3_left:
-        st.markdown("### 📊 Gross Revenue Contributions by Region")
+    # --- GRID ROW 2: DIAGRAMS 3 & 4 ---
+    r2_left, r2_right = st.columns(2)
+    with r2_left:
+        st.markdown("### 3. 📊 Bar Graph: Gross Revenue Contributions by Region")
         bar_data = filtered_df.groupby('Region')['Total Revenue (USD)'].sum().reset_index()
-        fig_bar = px.bar(bar_data, x='Region', y='Total Revenue (USD)', labels={'Total Revenue (USD)': 'Gross Yield ($)'}, template='plotly_white')
-        st.plotly_chart(fig_bar, use_container_width=True)
+        fig3 = px.bar(bar_data, x='Region', y='Total Revenue (USD)', labels={'Total Revenue (USD)': 'Gross Yield ($)'}, template='plotly_white')
+        st.plotly_chart(fig3, use_container_width=True)
         
-    with col_row3_right:
-        st.markdown("### 📍 Cores vs TDP Configuration Matrix (Dotted Graph)")
-        fig_scatter = px.scatter(
+    with r2_right:
+        st.markdown("### 4. 📍 Dotted Graph: Cores vs TDP Configuration Matrix")
+        fig4 = px.scatter(
             filtered_df, x='Cores', y='TDP (Watts)', color='Series', hover_name='Model',
             labels={'Cores': 'Core Count', 'TDP (Watts)': 'TDP (Watts)'}, template='plotly_white'
         )
-        st.plotly_chart(fig_scatter, use_container_width=True)
+        st.plotly_chart(fig4, use_container_width=True)
+
+    st.write("---")
+
+    # --- GRID ROW 3: DIAGRAMS 5 & 6 ---
+    r3_left, r3_right = st.columns(2)
+    with r3_left:
+        st.markdown("### 5. 📊 Histogram Graph: Market Distribution of Unit Prices")
+        fig5 = px.histogram(filtered_df, x='Unit Price (USD)', nbins=15, labels={'Unit Price (USD)': 'Price ($)'}, template='plotly_white')
+        st.plotly_chart(fig5, use_container_width=True)
+        
+    with r3_right:
+        st.markdown("### 6. 📈 Area Chart: Cumulative Estimated Power Shipped (kW)")
+        power_data = filtered_df.groupby('Date')['Est Power Shipped (kW)'].sum().reset_index()
+        fig6 = px.area(power_data, x='Date', y='Est Power Shipped (kW)', labels={'Est Power Shipped (kW)': 'Power Capacity (kW)'}, template='plotly_white')
+        st.plotly_chart(fig6, use_container_width=True)
+
+    st.write("---")
+
+    # --- GRID ROW 4: DIAGRAMS 7 & 8 ---
+    r4_left, r4_right = st.columns(2)
+    with r4_left:
+        st.markdown("### 7. 📦 Box Plot: TDP (Watts) Dispersion Across Market Segments")
+        fig7 = px.box(filtered_df, x='Segment', y='TDP (Watts)', points="all", template='plotly_white')
+        st.plotly_chart(fig7, use_container_width=True)
+        
+    with r4_right:
+        st.markdown("### 8. 🌪️ Funnel Chart: Units Sold Volumetric Pipeline by Segment")
+        funnel_data = filtered_df.groupby('Segment')['Units Sold'].sum().reset_index().sort_values(by='Units Sold', ascending=False)
+        fig8 = px.funnel(funnel_data, x='Units Sold', y='Segment', template='plotly_white')
+        st.plotly_chart(fig8, use_container_width=True)
 
     st.write("---")
     st.markdown("### 📋 Filtered System Data Ledger")
     st.dataframe(filtered_df, use_container_width=True)
 
 else:
-    st.info("⚠️ Workspace empty. Adjust filter options to reload.")
+    st.info("⚠️ Workspace empty. Adjust active filters to populate your graphics matrix panels.")
