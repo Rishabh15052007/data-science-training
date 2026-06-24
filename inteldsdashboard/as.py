@@ -24,7 +24,6 @@ def load_data():
     df['TDP (Watts)'] = df['TDP (Watts)'].fillna(0)
     df['Cores'] = df['Cores'].fillna(0)
     df['Unit Price (USD)'] = df['Unit Price (USD)'].fillna(0)
-    df['Est Power Shipped (kW)'] = df['Est Power Shipped (kW)'].fillna(0)
     df['Year'] = df['Year'].fillna(df['Date'].dt.year)
     return df
 
@@ -103,12 +102,12 @@ if not filtered_df.empty:
     # 5. DIAGRAM GRID INTERFACE LAYOUT
     # ------------------------------------
     
-    # --- GRID ROW 1: DIAGRAMS 1 & 2 ---
+    # --- GRID ROW 1: DIAGRAMS 1 & 2 (UNTOUCHED) ---
     r1_left, r1_right = st.columns(2)
     with r1_left:
         st.markdown("### 1. 🍕 Pie Chart: Share of Units Sold by Processor Series")
         pie_data = filtered_df.groupby('Series')['Units Sold'].sum().reset_index()
-        fig1 = px.pie(pie_data, names='Series', values='Units Sold', template='plotly_white')
+        fig1 = px.pie(pie_data, names='Series', values='Units Sold', template='plotly_white', color_discrete_sequence=px.colors.qualitative.Pastel)
         st.plotly_chart(fig1, use_container_width=True)
         
     with r1_right:
@@ -119,7 +118,7 @@ if not filtered_df.empty:
 
     st.write("---")
 
-    # --- GRID ROW 2: DIAGRAMS 3 & 4 ---
+    # --- GRID ROW 2: DIAGRAMS 3 & 4 (UNTOUCHED) ---
     r2_left, r2_right = st.columns(2)
     with r2_left:
         st.markdown("### 3. 📊 Bar Graph: Gross Revenue Contributions by Region")
@@ -137,32 +136,39 @@ if not filtered_df.empty:
 
     st.write("---")
 
-    # --- GRID ROW 3: DIAGRAMS 5 & 6 ---
+    # --- GRID ROW 3: NEW DIAGRAMS 5 & 6 ---
     r3_left, r3_right = st.columns(2)
     with r3_left:
-        st.markdown("### 5. 📊 Histogram Graph: Market Distribution of Unit Prices")
-        fig5 = px.histogram(filtered_df, x='Unit Price (USD)', nbins=15, labels={'Unit Price (USD)': 'Price ($)'}, template='plotly_white')
+        st.markdown("### 5. 📊 Stacked Percent Bar: Product Series Mix Ratio across Regions")
+        ratio_data = filtered_df.groupby(['Region', 'Series'])['Units Sold'].sum().reset_index()
+        fig5 = px.bar(ratio_data, x='Region', y='Units Sold', color='Series', barmode='relative',
+                      labels={'Units Sold': 'Total Units Shipped'}, template='plotly_white', color_discrete_sequence=px.colors.qualitative.Safe)
         st.plotly_chart(fig5, use_container_width=True)
         
     with r3_right:
-        st.markdown("### 6. 📈 Area Chart: Cumulative Estimated Power Shipped (kW)")
-        power_data = filtered_df.groupby('Date')['Est Power Shipped (kW)'].sum().reset_index()
-        fig6 = px.area(power_data, x='Date', y='Est Power Shipped (kW)', labels={'Est Power Shipped (kW)': 'Power Capacity (kW)'}, template='plotly_white')
+        st.markdown("### 6. 📊 Grouped Bar Graph: Price Comparisons across Market Segments")
+        price_data = filtered_df.groupby(['Segment', 'Series'])['Unit Price (USD)'].mean().reset_index()
+        fig6 = px.bar(price_data, x='Segment', y='Unit Price (USD)', color='Series', barmode='group',
+                      labels={'Unit Price (USD)': 'Average Unit Cost ($)'}, template='plotly_white', color_discrete_sequence=px.colors.qualitative.Prism)
         st.plotly_chart(fig6, use_container_width=True)
 
     st.write("---")
 
-    # --- GRID ROW 4: DIAGRAMS 7 & 8 ---
+    # --- GRID ROW 4: NEW DIAGRAMS 7 & 8 ---
     r4_left, r4_right = st.columns(2)
     with r4_left:
-        st.markdown("### 7. 📦 Box Plot: TDP (Watts) Dispersion Across Market Segments")
-        fig7 = px.box(filtered_df, x='Segment', y='TDP (Watts)', points="all", template='plotly_white')
+        st.markdown("### 7. 📈 Multi-Line Graph: Average Core Count Tracking by Production Year")
+        year_core_data = filtered_df.groupby(['Year', 'Series'])['Cores'].mean().reset_index()
+        fig7 = px.line(year_core_data, x='Year', y='Cores', color='Series', markers=True,
+                       labels={'Cores': 'Average Cores Density'}, template='plotly_white', color_discrete_sequence=px.colors.qualitative.Set2)
         st.plotly_chart(fig7, use_container_width=True)
         
     with r4_right:
-        st.markdown("### 8. 🌪️ Funnel Chart: Units Sold Volumetric Pipeline by Segment")
-        funnel_data = filtered_df.groupby('Segment')['Units Sold'].sum().reset_index().sort_values(by='Units Sold', ascending=False)
-        fig8 = px.funnel(funnel_data, x='Units Sold', y='Segment', template='plotly_white')
+        st.markdown("### 8. 📊 Horizontal Bar Chart: Total Volume Shipped by Computing Core Layouts")
+        core_vol_data = filtered_df.groupby('Cores')['Units Sold'].sum().reset_index().sort_values(by='Units Sold', ascending=True)
+        core_vol_data['Cores'] = core_vol_data['Cores'].astype(str) + " Cores"
+        fig8 = px.bar(core_vol_data, x='Units Sold', y='Cores', orientation='h',
+                      labels={'Units Sold': 'Total Units Handled'}, template='plotly_white', color_discrete_sequence=['#4f46e5'])
         st.plotly_chart(fig8, use_container_width=True)
 
     st.write("---")
