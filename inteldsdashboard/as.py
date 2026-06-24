@@ -45,7 +45,7 @@ st.markdown("""
 # ------------------------------------
 @st.cache_data
 def load_data():
-    df = pd.read_csv("intelds_cleaned.csv")
+    df = pd.read_csv("inteldsdashboard/intelds_cleaned.csv")
     df['Date'] = pd.to_datetime(df['Date'])
     df['Units Sold'] = df['Units Sold'].fillna(0)
     df['Total Revenue (USD)'] = df['Total Revenue (USD)'].fillna(0)
