@@ -12,23 +12,6 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Clean, simple card styles for the summary boxes (Background left default clean white)
-st.markdown("""
-    <style>
-    .kpi-card {
-        background-color: #ffffff;
-        border: 1px solid #cbd5e1;
-        padding: 15px;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        margin-bottom: 15px;
-    }
-    .kpi-lbl { font-size: 11px; font-weight: 600; text-transform: uppercase; color: #64748b; }
-    .kpi-val { font-size: 22px; font-weight: 700; color: #0f172a; margin-top: 5px; }
-    .kpi-sub-row { display: flex; justify-content: space-between; font-size: 11px; color: #475569; margin-top: 10px; border-top: 1px solid #e2e8f0; padding-top: 5px; }
-    </style>
-""", unsafe_allow_html=True)
-
 # ------------------------------------
 # 2. DATA PROCESSING PIPELINE
 # ------------------------------------
@@ -91,87 +74,66 @@ if search_model:
     filtered_df = filtered_df[filtered_df['Model'].str.contains(search_model, case=False, na=False)]
 
 # ------------------------------------
-# 4. MAIN LAYOUT
+# 4. MAIN LAYOUT & GRID HEADERS
 # ------------------------------------
 st.title("💻 Intel Silicon Infrastructure Analytics Portal")
 st.write("---")
 
-# SUMMARY METRICS MATRICES
-st.markdown("### 🔢 Summary Value Metrics Block")
-col_k1, col_k2, col_k3 = st.columns(3)
-
-if not filtered_df.empty:
-    avg_rev, max_rev, min_rev = filtered_df['Total Revenue (USD)'].mean(), filtered_df['Total Revenue (USD)'].max(), filtered_df['Total Revenue (USD)'].min()
-    avg_tdp, max_tdp, min_tdp = filtered_df['TDP (Watts)'].mean(), filtered_df['TDP (Watts)'].max(), filtered_df['TDP (Watts)'].min()
-    avg_cores, max_cores, min_cores = filtered_df['Cores'].mean(), filtered_df['Cores'].max(), filtered_df['Cores'].min()
-else:
-    avg_rev = max_rev = min_rev = avg_tdp = max_tdp = min_tdp = avg_cores = max_cores = min_cores = 0
-
-with col_k1:
-    st.markdown(f"""
-    <div class="kpi-card">
-        <div class="kpi-lbl">💰 Commercial Financial Revenue</div>
-        <div class="kpi-val">${avg_rev:,.2f}</div>
-        <div class="kpi-sub-row"><span>MAX: ${max_rev:,.2f}</span><span>MIN: ${min_rev:,.2f}</span></div>
-    </div>
-    """, unsafe_allow_html=True)
-
-with col_k2:
-    st.markdown(f"""
-    <div class="kpi-card">
-        <div class="kpi-lbl">⚡ Thermal Design Envelopes (TDP)</div>
-        <div class="kpi-val">{avg_tdp:.1f} W</div>
-        <div class="kpi-sub-row"><span>MAX: {max_tdp:.0f}W</span><span>MIN: {min_tdp:.0f}W</span></div>
-    </div>
-    """, unsafe_allow_html=True)
-
-with col_k3:
-    st.markdown(f"""
-    <div class="kpi-card">
-        <div class="kpi-lbl">🎛️ Physical Computing Cores Matrix</div>
-        <div class="kpi-val">{avg_cores:.1f} Cores</div>
-        <div class="kpi-sub-row"><span>MAX: {max_cores:.0f} C</span><span>MIN: {min_cores:.0f} C</span></div>
-    </div>
-    """, unsafe_allow_html=True)
-
-st.write("---")
-
-# ------------------------------------
-# 5. CHARTS AND GRAPHICS ONLY
-# ------------------------------------
 if not filtered_df.empty:
     
-    # 1. PIE CHART
-    st.subheader("🍕 Pie Chart: Share of Units Sold by Processor Series")
-    pie_data = filtered_df.groupby('Series')['Units Sold'].sum().reset_index()
-    fig_pie = px.pie(pie_data, names='Series', values='Units Sold', template='plotly_white')
-    st.plotly_chart(fig_pie, use_container_width=True)
+    # 🔢 ROW 1: THE THREE CARD METRICS SIDE-BY-SIDE
+    col_k1, col_k2, col_k3 = st.columns(3)
+    
+    avg_rev = filtered_df['Total Revenue (USD)'].mean()
+    avg_tdp = filtered_df['TDP (Watts)'].mean()
+    avg_cores = filtered_df['Cores'].mean()
+
+    with col_k1:
+        st.metric(label="💰 Avg Financial Revenue", value=f"${avg_rev:,.2f}")
+    with col_k2:
+        st.metric(label="⚡ Avg Thermal Envelope (TDP)", value=f"{avg_tdp:.1f} W")
+    with col_k3:
+        st.metric(label="🎛️ Avg Computing Cores", value=f"{avg_cores:.1f} Cores")
+        
     st.write("---")
 
-    # 2. LINE CHART & 3. BAR GRAPH (SIDE-BY-SIDE)
-    col_g1, col_g2 = st.columns(2)
+    # 📊 ROW 2: PIE CHART & LINE CHART SIDE-BY-SIDE
+    col_row2_left, col_row2_right = st.columns(2)
     
-    with col_g1:
-        st.subheader("📈 Line Chart: Revenue Performance Trend Over Time")
+    with col_row2_left:
+        st.markdown("### 🍕 Share of Units Sold by Processor Series")
+        pie_data = filtered_df.groupby('Series')['Units Sold'].sum().reset_index()
+        fig_pie = px.pie(pie_data, names='Series', values='Units Sold', template='plotly_white')
+        st.plotly_chart(fig_pie, use_container_width=True)
+        
+    with col_row2_right:
+        st.markdown("### 📈 Revenue Performance Trend Over Time")
         time_data = filtered_df.groupby('Date')['Total Revenue (USD)'].sum().reset_index()
         fig_line = px.line(time_data, x='Date', y='Total Revenue (USD)', labels={'Total Revenue (USD)': 'Revenue ($)'}, template='plotly_white')
         st.plotly_chart(fig_line, use_container_width=True)
-        
-    with col_g2:
-        st.subheader("📊 Bar Graph: Gross Revenue Contributions by Region")
-        bar_data = filtered_df.groupby('Region')['Total Revenue (USD)'].sum().reset_index()
-        fig_bar = px.bar(bar_data, x='Region', y='Total Revenue (USD)', labels={'Total Revenue (USD)': 'Gross Yield ($)'}, template='plotly_white')
-        st.plotly_chart(fig_bar, use_container_width=True)
 
     st.write("---")
 
-    # 4. DOTTED GRAPH (SCATTER PLOT)
-    st.subheader("📍 Dotted Graph (Scatter Plot): Physical Cores vs TDP Envelopes")
-    fig_scatter = px.scatter(
-        filtered_df, x='Cores', y='TDP (Watts)', color='Series', hover_name='Model',
-        labels={'Cores': 'Core Count', 'TDP (Watts)': 'TDP (Watts)'}, template='plotly_white'
-    )
-    st.plotly_chart(fig_scatter, use_container_width=True)
+    # 📊 ROW 3: BAR GRAPH & DOTTED PLOT SIDE-BY-SIDE
+    col_row3_left, col_row3_right = st.columns(2)
+    
+    with col_row3_left:
+        st.markdown("### 📊 Gross Revenue Contributions by Region")
+        bar_data = filtered_df.groupby('Region')['Total Revenue (USD)'].sum().reset_index()
+        fig_bar = px.bar(bar_data, x='Region', y='Total Revenue (USD)', labels={'Total Revenue (USD)': 'Gross Yield ($)'}, template='plotly_white')
+        st.plotly_chart(fig_bar, use_container_width=True)
+        
+    with col_row3_right:
+        st.markdown("### 📍 Cores vs TDP Configuration Matrix (Dotted Graph)")
+        fig_scatter = px.scatter(
+            filtered_df, x='Cores', y='TDP (Watts)', color='Series', hover_name='Model',
+            labels={'Cores': 'Core Count', 'TDP (Watts)': 'TDP (Watts)'}, template='plotly_white'
+        )
+        st.plotly_chart(fig_scatter, use_container_width=True)
+
+    st.write("---")
+    st.markdown("### 📋 Filtered System Data Ledger")
+    st.dataframe(filtered_df, use_container_width=True)
 
 else:
     st.info("⚠️ Workspace empty. Adjust filter options to reload.")
