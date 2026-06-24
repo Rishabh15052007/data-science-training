@@ -3,25 +3,24 @@ import pandas as pd
 import plotly.express as px
 
 # ------------------------------------
-# 1. CANVAS CONFIGURATION & EXECUTIVE THEME
+# 1. CANVAS CONFIGURATION & THEME SETUP
 # ------------------------------------
 st.set_page_config(
-    page_title="Intel Engineering Analytics Portal",
+    page_title="Intel Silicon Architecture Analytics Portal",
     page_icon="💻",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Professional Executive Slate Styling Framework
+# Premium executive clean canvas styling
 st.markdown("""
     <style>
-    /* Clean neutral canvas framework */
-    .main { background-color: #f8fafc; color: #1e293b; }
-    [data-testid="stSidebar"] { background-color: #0f172a; border-right: 1px solid #e2e8f0; }
+    .main { background-color: #f8fafc; color: #0f172a; }
+    [data-testid="stSidebar"] { background-color: #0f172a; border-right: 1px solid #cbd5e1; }
     [data-testid="stSidebar"] .stMarkdown h3 { color: #38bdf8 !important; }
     [data-testid="stSidebar"] label { color: #cbd5e1 !important; font-weight: 500; }
     
-    /* Structured KPI Block Components */
+    /* Structured White Metrics Blocks */
     .kpi-card {
         background-color: #ffffff;
         border: 1px solid #cbd5e1;
@@ -41,10 +40,11 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ------------------------------------
-# 2. ROBUST DATA PROCESSING PIPELINE
+# 2. DATA PROCESSING PIPELINE
 # ------------------------------------
 @st.cache_data
 def load_data():
+    # Points directly to your folder path inside the GitHub repo
     df = pd.read_csv("inteldsdashboard/intelds_cleaned.csv")
     df['Date'] = pd.to_datetime(df['Date'])
     df['Units Sold'] = df['Units Sold'].fillna(0)
@@ -57,11 +57,11 @@ def load_data():
 try:
     df = load_data()
 except FileNotFoundError:
-    st.error("Missing 'intelds_cleaned.csv' data repository file within this root folder layout context.")
+    st.error("Missing data repository file. Please verify folder paths.")
     st.stop()
 
 # ------------------------------------
-# 3. INTERACTIVE CONTROL SIDEBAR PANEL
+# 3. INTERACTIVE SIDEBAR FILTERS
 # ------------------------------------
 st.sidebar.image("https://upload.wikimedia.org/wikipedia/commons/c/c9/Intel-logo.svg", width=90)
 st.sidebar.markdown("### 🎛️ Workspace Controls")
@@ -88,7 +88,7 @@ tdp_range = st.sidebar.slider("Thermal Envelope Range (Watts)", min_tdp, max_tdp
 min_cores, max_cores = int(df['Cores'].min()), int(df['Cores'].max())
 cores_range = st.sidebar.slider("Processor Cores Bounds", min_cores, max_cores, (min_cores, max_cores))
 
-# Query Engine Execution
+# Query Engine Filter Application
 filtered_df = df[
     (df['Year'].isin(selected_years)) &
     (df['Region'].isin(selected_regions)) &
@@ -102,14 +102,14 @@ if search_model:
     filtered_df = filtered_df[filtered_df['Model'].str.contains(search_model, case=False, na=False)]
 
 # ------------------------------------
-# 4. MAIN TELEMETRY DASHBOARD FRAME
+# 4. HEADER SECTIONS
 # ------------------------------------
 st.title("💻 Intel Silicon Infrastructure Command Analytics")
-st.markdown("A clean, highly scannable platform examining yield revenues, lithography nodes, and physical thermal metrics distributions.")
+st.markdown("An executive metrics workspace tracking performance configurations, fabrication processes, and volume yields.")
 st.write("---")
 
 # ------------------------------------
-# 5. MAX, MIN, AVG DYNAMIC CARD BLOCKS
+# 5. MAX, MIN, AVG METRICS OVERVIEW
 # ------------------------------------
 st.markdown("### 🔢 Architectural Aggregation Matrix")
 col_k1, col_k2, col_k3 = st.columns(3)
@@ -160,11 +160,11 @@ with col_k3:
 st.write("---")
 
 # ------------------------------------
-# 6. GRAPHICS & VISUALIZATION TRACKS
+# 6. CHARTS AND VISUALIZATION SEGMENTS
 # ------------------------------------
 if not filtered_df.empty:
     
-    # ROW 1: LINE CHART & BAR GRAPH
+    # ROW 1: TIME VELOCITY LINE CHART & REGIONAL BAR GRAPH
     r1_g1, r1_g2 = st.columns(2)
     with r1_g1:
         st.subheader("📈 Revenue Performance Trajectory Over Time")
@@ -173,30 +173,30 @@ if not filtered_df.empty:
         st.plotly_chart(fig_line, use_container_width=True)
         
     with r1_g2:
-        st.subheader("📊 Volumetric Gross Revenue Allocations by Region")
+        st.subheader("📊 Gross Revenue Contributions by Regional Domain")
         bar_data = filtered_df.groupby('Region')['Total Revenue (USD)'].sum().reset_index()
         fig_bar = px.bar(bar_data, x='Region', y='Total Revenue (USD)', labels={'Total Revenue (USD)': 'Gross Yield ($)'}, template='plotly_white', color_discrete_sequence=['#475569'])
         st.plotly_chart(fig_bar, use_container_width=True)
 
     st.write("---")
 
-    # ROW 2: CONTRAST PIE CHARTS
+    # ROW 2: PIE CHART (SERIES) & PIE CHART (LITHOGRAPHY)
     r2_g1, r2_g2 = st.columns(2)
     with r2_g1:
-        st.subheader("🍕 Volumetric Product Share by Infrastructure Segment")
-        pie_data1 = filtered_df.groupby('Segment')['Units Sold'].sum().reset_index()
-        fig_pie1 = px.pie(pie_data1, names='Segment', values='Units Sold', template='plotly_white', color_discrete_sequence=px.colors.sequential.Blues_r)
+        st.subheader("🍕 Volumetric Product Share by Processor Series")
+        pie_data1 = filtered_df.groupby('Series')['Units Sold'].sum().reset_index()
+        fig_pie1 = px.pie(pie_data1, names='Series', values='Units Sold', template='plotly_white', color_discrete_sequence=px.colors.qualitative.G10)
         st.plotly_chart(fig_pie1, use_container_width=True)
         
     with r2_g2:
         st.subheader("🔬 Production Allocation Yield Across Fabrication Lithography Nodes")
         pie_data2 = filtered_df.groupby('Lithography (nm)')['Units Sold'].sum().reset_index()
-        fig_pie2 = px.pie(pie_data2, names='Lithography (nm)', values='Units Sold', template='plotly_white', color_discrete_sequence=px.colors.sequential.Slate_r)
+        fig_pie2 = px.pie(pie_data2, names='Lithography (nm)', values='Units Sold', template='plotly_white', color_discrete_sequence=px.colors.sequential.Cividis)
         st.plotly_chart(fig_pie2, use_container_width=True)
 
     st.write("---")
 
-    # ROW 3: SCATTER DOT PLOT MATRIX
+    # ROW 3: SCATTER DOT MATRIX
     st.subheader("📍 Dotted Scatter Grid: Core Architectural Configurations vs TDP Envelopes")
     fig_scatter = px.scatter(
         filtered_df, x='Cores', y='TDP (Watts)', color='Series', hover_name='Model',
@@ -210,4 +210,4 @@ if not filtered_df.empty:
     st.dataframe(filtered_df, use_container_width=True)
 
 else:
-    st.info("⚠️ Workspace empty. Adjust your active sidebar multi-selection parameters to reload your graphs panel layout blocks.")
+    st.info("⚠️ Workspace empty. Adjust active sidebar multi-selection parameters to reload your graphs panel layout blocks.")
